@@ -200,15 +200,16 @@ public class FireBirdUtils {
                 + "          end\n"
                 + "        when 12 then 'date'\n"
                 + "        when 13 then 'time'\n"
-                + "        when 27 then -- только диалект 1\n"
-                + "          case fs.rdb$field_scale\n"
-                + "            when 0 then 'double precision'\n"
-                + "            else 'numeric'\n"
-                + "          end\n"
-                + "        when 35 then 'date'  --или timestamp в зависимости от диалекта\n"
-                + "        when 37 then 'varchar'\n"
-                + "        when 261 then 'blob'\n"
-                + " 		when 14 then 'varchar'\n"
+                + "      when 27 then -- только диалект 1\n"
+                + "        case fs.rdb$field_scale\n"
+                + "          when 0 then 'double precision'\n"
+                + "          else 'numeric'\n"
+                + "        end\n"
+                + "      when 35 then 'date'  --или timestamp в зависимости от диалекта\n"
+                + "      when 37 then 'varchar'\n"
+                + "      when 261 then 'blob'\n"
+                + "      when 14 then 'varchar'\n"
+                + "      when 23 then 'boolean'\n "
                 + "      when 37 then 'varchar'        \n"
                 + "      else 'unknown'\n"
                 + "      end\n"
@@ -246,6 +247,8 @@ public class FireBirdUtils {
                         sql.append("(").append(argname == null ? "" : argname.trim()).append(" ").append(argtype == null ? "" : argtype.trim());
                     }
                     while (dbResult.next()) {
+	                    argname = JDBCUtils.safeGetString(dbResult, "RDB$ARGUMENT_NAME");
+        	            argtype = JDBCUtils.safeGetString(dbResult, "argtype");
                         sql.append((JDBCUtils.safeGetInt(dbResult, "RDB$ARGUMENT_POSITION") != 1 ? ",\n" : "\n")).append(argname == null ? "" : argname.trim()).append(" ").append(argtype == null ? "" : argtype.trim());
                     }
                     sql.append(")\n ").append(sqlret);
