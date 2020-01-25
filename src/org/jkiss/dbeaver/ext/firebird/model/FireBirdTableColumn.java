@@ -33,7 +33,7 @@ import org.jkiss.dbeaver.model.struct.DBSDataType;
 
 import java.sql.SQLException;
 
-public class FireBirdTableColumn extends GenericTableColumn implements DBPNamedObject2 {
+public final class FireBirdTableColumn extends GenericTableColumn implements DBPNamedObject2 {
 
     private String domainTypeName;
     private FireBirdDataType dataType;
@@ -104,8 +104,7 @@ public class FireBirdTableColumn extends GenericTableColumn implements DBPNamedO
 
     @Property(viewable = true, editable = true, updatable = true, order = 20, listProvider = ColumnTypeNameListProvider.class)
     @Override
-    public String getTypeName()
-    {
+    public String getTypeName() {
         return super.getTypeName();
     }
 
@@ -117,16 +116,14 @@ public class FireBirdTableColumn extends GenericTableColumn implements DBPNamedO
 
     @Property(viewable = true, editable = true, updatable = true, order = 70)
     @Override
-    public String getDefaultValue()
-    {
+    public String getDefaultValue() {
         return super.getDefaultValue();
     }
 
     @Nullable
     @Override
     @Property(viewable = true, editable = true, updatable = true, multiline = true, order = 100)
-    public String getDescription()
-    {
+    public String getDescription() {
         return super.getDescription();
     }
 

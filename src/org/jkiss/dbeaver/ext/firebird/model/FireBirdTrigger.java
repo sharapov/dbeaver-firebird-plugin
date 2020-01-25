@@ -26,8 +26,8 @@ import org.jkiss.dbeaver.model.meta.Property;
  */
 public class FireBirdTrigger extends GenericTrigger {
 
-    private FireBirdTriggerType type;
-    private int sequence;
+    private final FireBirdTriggerType type;
+    private final int sequence;
 
     public FireBirdTrigger(GenericStructContainer container, GenericTableBase table, String name, String description, FireBirdTriggerType type, int sequence) {
         super(container, table, name, description);

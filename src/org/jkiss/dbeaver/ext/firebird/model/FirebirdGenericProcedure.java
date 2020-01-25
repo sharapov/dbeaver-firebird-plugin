@@ -20,7 +20,7 @@ import org.jkiss.dbeaver.model.struct.rdb.DBSProcedureType;
 
 /**
  *
- * @author RZP16
+ * @author a.v.sharapov
  */
 public class FirebirdGenericProcedure extends GenericProcedure {
 

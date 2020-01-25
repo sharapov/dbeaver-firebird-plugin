@@ -16,7 +16,7 @@
  */
 package org.jkiss.dbeaver.ext.firebird.model;
 
-public class FireBirdConstants {
+public class FireBirdConstants  {
 
     public static final String TYPE_FIELD_TYPE = "RDB$FIELD_TYPE";
     public static final String TYPE_FIELD_SUB_TYPE = "RDB$FIELD_SUB_TYPE";

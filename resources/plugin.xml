@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+
+<plugin>
+    <extension point="org.jkiss.dbeaver.generic.meta">
+        <meta id="firebird" class="org.jkiss.dbeaver.ext.firebird.model.FireBirdMetaModel" driverClass="org.firebirdsql.jdbc.FBDriver"/>
+        <meta id="firebird" class="org.jkiss.dbeaver.ext.firebird.model.FireBirdMetaModel" driverClass="odbfb.jdbc.OdbFbDriver"/>
+    </extension>
+    <extension point="org.jkiss.dbeaver.dataSourceProvider">
+
+        <!-- FirebirdSql -->
+
+        <datasource
+                class="org.jkiss.dbeaver.ext.firebird.FireBirdDataSourceProvider"
+                description="%datasource.firebird.description"
+                id="jaybird"
+                parent="generic"
+                label="Firebird"
+                icon="icons/firebird_icon.png">
+            <tree path="generic" label="Generic data source">
+                <items label="#catalog" path="catalog" property="catalogs" icon="#database" optional="true">
+                    <items label="#schema" path="schema" property="schemas" icon="#schema" optional="true">
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTable" label="%tree.tables.node.name" icon="#folder_table" description="%tree.tables.node.tip">
+                            <items label="%tree.table.node.name" path="table" property="physicalTables" icon="#table">
+                                <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTableColumn" label="%tree.columns.node.name" icon="#columns" description="%tree.columns.node.tip">
+                                    <items label="%tree.column.node.name" path="attribute" property="attributes" icon="#column">
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.generic.model.GenericPrimaryKey" label="%tree.uni_keys.node.name" icon="#constraints" description="%tree.uni_keys.node.tip" visibleIf="!object.view &amp;&amp; object.dataSource.info.supportsReferentialIntegrity()">
+                                    <items label="%tree.uni_key.node.name" path="uniqueKey" property="constraints" icon="#unique-key">
+                                        <items label="%tree.uni_key.columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTableForeignKey" label="%tree.foreign_keys.node.name" icon="#foreign-keys" description="%tree.foreign_keys.node.tip" visibleIf="!object.view &amp;&amp; object.dataSource.info.supportsReferentialIntegrity()">
+                                    <items label="%tree.foreign_key.node.name" path="association" property="associations" icon="#foreign-key">
+                                        <items label="%tree.foreign_key_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTableIndex" label="%tree.indexes.node.name" icon="#indexes" description="%tree.indexes.node.tip" visibleIf="object.dataSource.info.supportsIndexes()">
+                                    <items label="%tree.index.node.name" path="index" property="indexes" icon="#index">
+                                        <items label="%tree.index_columns.node.name" path="column" property="attributeReferences" icon="#column" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder label="%tree.references.node.name" icon="#references" description="%tree.references.node.tip" visibleIf="!object.view &amp;&amp; object.dataSource.info.supportsReferentialIntegrity()" virtual="true">
+                                    <items label="%tree.reference.node.name" path="reference" property="references" icon="#reference" virtual="true">
+                                        <items label="%tree.reference_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true" virtual="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <!--folder label="%tree.references.node.name" icon="#references" description="%tree.references.node.tip" visibleIf="!object.view" virtual="true">
+                                    <items label="%tree.reference.node.name" path="table" property="usedBy" icon="#reference" virtual="true">
+                                        <items label="%tree.reference_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true" virtual="true">
+                                        </items>
+                                    </items>
+                                </folder-->
+                                <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTrigger" label="%tree.triggers.node.name" icon="#triggers" description="%tree.triggers.node.tip" visibleIf="object.dataSource.metaModel.supportsTriggers(object.dataSource)">
+                                    <items label="%tree.trigger.node.name" path="trigger" property="triggers" icon="#trigger"/>
+                                </folder>
+                                <items label="%tree.sub_table.node.name" optional="true" path="subtable" property="subTables" icon="#table" recursive=".." visibleIf="!object.view">
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericView" label="%tree.tviews.node.name" icon="#folder_view" description="%tree.tviews.node.tip">
+                            <items label="%tree.tview.node.name" path="view" property="views" icon="#view">
+                                <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTableColumn" label="%tree.columns.node.name" icon="#columns" description="View columns">
+                                    <items label="%tree.column.node.name" path="attribute" property="attributes" icon="#column">
+                                    </items>
+                                </folder>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.model.struct.rdb.DBSTableIndex" label="%tree.indexes.node.name" icon="#indexes" description="%tree.indexes.node.tip" visibleIf="object.dataSource.info.supportsIndexes()">
+                            <items icon="#index" label="%tree.index.node.name" path="index" property="indexes" virtual="true">
+                                <items icon="#column" label="%tree.index_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" inline="true" navigable="false" virtual="true">
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericProcedure" label="%tree.procedures.node.name" icon="#procedures" description="Procedures" visibleIf="object.dataSource.info.supportsStoredCode()">
+                            <items label="%tree.procedures.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="proceduresOnly" icon="#procedure">
+                                <items label="%tree.procedure_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="parameters" navigable="false"/>
+                            </items>
+                            <items label="%tree.package.node.name" path="package" property="packages" icon="#package">
+                                <items label="%tree.procedures.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="procedures" icon="#procedure">
+                                    <items label="%tree.procedure_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="parameters" navigable="false" inline="true"/>
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericProcedure" label="%tree.functions.node.name" icon="#functions" description="Functions" visibleIf="object.dataSource.info.supportsStoredCode() &amp;&amp; object.dataSource.splitProceduresAndFunctions()">
+                            <items label="%tree.functions.node.name" itemLabel="%tree.function.node.name" path="function" property="functionsOnly" icon="#function">
+                                <items label="%tree.function_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="parameters" navigable="false"/>
+                            </items>
+                        </folder>
+
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPackage" label="%tree.packages.node.name" icon="#packages" description="Packages">
+                            <items label="%tree.package.node.name" path="package" property="packages" icon="#package">
+                                <items label="%tree.package.node.name" itemLabel="%tree.package.node.name" path="package" property="packages" icon="#package" id="Package">
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdGenericProcedure" label="%tree.procedures.node.name" icon="#procedures" description="Procedures">
+                            <items label="%tree.procedure.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="procedures" icon="#procedure" id="Procedure">
+                                <!--items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items-->
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdGenericProcedure" label="%tree.functions.node.name" icon="#functions" description="Functions">
+                            <items label="%tree.function.node.name" itemLabel="%tree.function.node.name" path="package" property="functionsOnly" icon="#function">
+                                <!--items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items-->
+                            </items>
+                        </folder>
+                            </items>
+                            </items>
+                        </folder>
+
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericSequence" label="%tree.sequences.node.name" icon="#sequences" description="%tree.sequences.node.tip" visibleIf="object.dataSource.metaModel.supportsSequences(object.dataSource)">
+                            <items label="%tree.sequence.node.name" path="sequence" property="sequences" icon="#sequence"/>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericSynonym" label="%tree.synonyms.node.name" icon="#synonyms" description="Synonyms" visibleIf="object.dataSource.metaModel.supportsSynonyms(object.dataSource)">
+                            <items label="%tree.synonym.node.name" path="synonym" property="synonyms" icon="#synonym"/>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTrigger" label="%tree.triggers.node.name" icon="#triggers" description="Global triggers" visibleIf="object.dataSource.metaModel.supportsDatabaseTriggers(object.dataSource)">
+                            <items label="%tree.trigger.node.name" path="trigger" property="triggers" icon="#trigger"/>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.generic.model.GenericTrigger" label="%tree.tableTriggers.node.name" icon="#triggers" description="%tree.tableTriggers.node.tip" visibleIf="object.dataSource.metaModel.supportsTriggers(object.dataSource)">
+                            <items label="%tree.trigger.node.name" path="trigger" property="tableTriggers" icon="#trigger"/>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.model.struct.DBSDataType" label="%tree.dataTypes.node.name" icon="#data_types" description="%tree.dataTypes.node.tip">
+                            <items label="%tree.dataType.node.name" path="dataType" property="dataTypes" icon="#data_type"/>
+                        </folder>
+                    </items>
+                </items>
+            </tree>
+
+
+
+
+		  <!--tree
+                  icon="icons/firebird_icon.png"
+                  label="Firebird data sourceJDBC"
+                  path="firebird">
+
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTable" label="%tree.tables.node.name" icon="#folder_table" description="Tables">
+                            <items label="%tree.table.node.name" path="table" property="tables" icon="#table">
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableColumn" label="%tree.columns.node.name" icon="#columns" description="Table columns">
+                                    <items label="%tree.column.node.name" path="column" property="attributes" icon="#column">
+                                    </items>
+                                </folder>
+
+                            </items>
+                        </folder>  
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdGenericProcedure" label="%tree.procedures.node.name" icon="#procedures" description="Procedures">
+                            <items label="%tree.procedure.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="procedures" icon="#procedure" id="Procedure">
+                                < ! - - items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                < /items- - >
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPackage" label="%tree.packages.node.name" icon="#packages" description="Packages">
+                            <items label="%tree.package.node.name" path="package" property="packages" icon="#package">
+                                <items label="%tree.package.node.name" itemLabel="%tree.package.node.name" path="package" property="packages" icon="#package" id="Package">
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdGenericProcedure" label="%tree.procedures.node.name" icon="#procedures" description="Procedures">
+                            <items label="%tree.procedure.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="procedures" icon="#procedure" id="Procedure">
+                                < ! - -items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items- - >
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdGenericProcedure" label="%tree.functions.node.name" icon="#functions" description="Functions">
+                            <items label="%tree.function.node.name" itemLabel="%tree.function.node.name" path="package" property="functionsOnly" icon="#function">
+                                < ! - -items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items- - >
+                            </items>
+                        </folder>
+                            </items>
+                            </items>
+                        </folder>
+            </tree-->
+            <!--tree
+                  icon="icons/firebird_icon.png"
+                  label="Firebird data sourceJDBC"
+                  path="firebird">
+
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTable" label="%tree.tables.node.name" icon="#folder_table" description="Tables">
+                            <items label="%tree.table.node.name" path="table" property="tables" icon="#table">
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableColumn" label="%tree.columns.node.name" icon="#columns" description="Table columns">
+                                    <items label="%tree.column.node.name" path="column" property="attributes" icon="#column">
+                                    </items>
+                                </folder>
+
+                            </items>
+                        </folder>
+
+
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdGenericProcedure" label="%tree.functions.node.name" icon="#functions" description="Functions">
+                            <items label="%tree.function.node.name" itemLabel="%tree.function.node.name" path="function" property="packages" icon="#function" id="Function">
+                                <items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items>
+                            </items>
+                        </folder>
+
+                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSchema" label="%tree.schemas.node.name" icon="#folder_schema" description="Database schemas">
+                    <items label="%tree.schema.node.name" path="schema" property="schemas" icon="#schema">
+                        <icon if="object.system" icon="#schema_system"/>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTable" label="%tree.tables.node.name" icon="#folder_table" description="Tables">
+                            <items label="%tree.table.node.name" path="table" property="tables" icon="#table">
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableColumn" label="%tree.columns.node.name" icon="#columns" description="Table columns">
+                                    <items label="%tree.column.node.name" path="column" property="attributes" icon="#column">
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableConstraint" label="%tree.constraints.node.name" icon="#constraints" description="Table constraints">
+                                    <items label="%tree.constraint.node.name" path="constraint" property="constraints" icon="#unique-key">
+                                        <items label="%tree.constraint_columns.node.name" path="column" property="attributeReferences" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableForeignKey" label="%tree.foreign_keys.node.name" icon="#foreign-keys" description="Table foreign keys">
+                                    <items label="%tree.foreign_key.node.name" path="association" property="associations" icon="#foreign-key">
+                                        <items label="%tree.foreign_key_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder label="%tree.references.node.name" icon="#references" description="Table references" virtual="true">
+                                    <items label="%tree.reference_key.node.name" path="referenceKey" property="references" icon="#reference" virtual="true">
+                                        <items label="%tree.reference_key_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true" virtual="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableTrigger" label="%tree.triggers.node.name" icon="#triggers" description="Triggers">
+                                    <items label="%tree.trigger.node.name" path="trigger" property="triggers" icon="#trigger">
+                                        <items label="%tree.columns.node.name" itemLabel="%tree.column.node.name" path="column" property="columns" navigable="false" inline="false">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableIndex" label="%tree.indexes.node.name" icon="#indexes" description="Table indexes">
+                                    <items label="%tree.index.node.name" path="index" property="indexes" icon="#index">
+                                        <items label="%tree.index_columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributeReferences" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPartitionBase" label="%tree.partitions.node.name" icon="#partitions" description="Table partitions">
+                                    <items label="%tree.partition.node.name" path="partition" property="partitions" icon="#partition">
+                                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPartitionBase" label="%tree.subpartitions.node.name" icon="#partitions" description="tree.subpartitions.node.name">
+                                            <items label="%tree.subpartitions.node.name" itemLabel="%tree.subpartition.node.name" path="subpartition" property="subPartitions" navigable="false" inline="true">
+                                            </items>
+                                        </folder>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivTable" label="%tree.table_privileges.node.name" icon="#permissions" description="Table Privileges" navigable="false">
+                                    <items label="%tree.privilege.node.name" path="tablePrivs" property="tablePrivs" icon="#privilege">
+                                    </items>
+                                </folder>
+
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdView" label="%tree.views.node.name" icon="#folder_view" description="Views">
+                            <items label="%tree.view.node.name" path="view" property="views" icon="#view">
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableColumn" label="%tree.columns.node.name" icon="#columns" description="View columns">
+                                    <items label="%tree.columns.node.name" itemLabel="%tree.column.node.name" path="column" property="attributes" icon="#column">
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableConstraint" label="%tree.constraints.node.name" icon="#constraints" description="View constraints">
+                                    <items label="%tree.constraint.node.name" path="constraint" property="constraints" icon="#unique-key">
+                                        <items label="%tree.constraint.node.name columns" path="column" property="attributeReferences" navigable="false" inline="true">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableTrigger" label="%tree.triggers.node.name" icon="#triggers" description="Triggers">
+                                    <items label="%tree.trigger.node.name" path="trigger" property="triggers" icon="#trigger">
+                                        <items label="%tree.columns.node.name" itemLabel="%tree.column.node.name" path="column" property="columns" navigable="false" inline="false">
+                                        </items>
+                                    </items>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivTable" label="%tree.table_privileges.node.name" icon="#permissions" description="View Privileges" navigable="false">
+                                    <items label="%tree.privilege.node.name" path="tablePrivs" property="tablePrivs" icon="#privilege">
+                                    </items>
+                                </folder>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdMaterializedView" label="%tree.materialized_views.node.name" icon="#folder_view" description="Materialized Views">
+                            <items label="%tree.materialized_view.node.name" path="view" property="materializedViews" icon="#view">
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSequence" label="%tree.sequences.node.name" icon="#sequences" description="Sequences">
+                            <items label="%tree.sequence.node.name" path="sequence" property="sequences" icon="#sequence">
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdQueue" label="%tree.queues.node.name" description="Queues">
+                            <items label="%tree.queue.node.name" path="queues" property="queues">
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdDataType" label="%tree.types.node.name" icon="#data_types" description="Types">
+                            <items label="%tree.type.node.name" path="type" property="dataTypes" icon="#data_type">
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdDataTypeAttribute" label="%tree.attributes.node.name" icon="#attributes" description="Type attributes" visibleIf="object.hasAttributes()">
+                                    <items label="%tree.attribute.node.name" path="attribute" property="attributes" icon="#attribute"/>
+                                </folder>
+                                <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdDataTypeMethod" label="%tree.methods.node.name" icon="#procedures" description="Type methods" visibleIf="object.hasMethods()">
+                                    <items label="%tree.method.node.name" path="method" property="methods" icon="#procedure">
+                                        <items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="parameter" property="parameters" icon="#argument" navigable="false" inline="false">
+                                        </items>
+                                    </items>
+                                </folder>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPackage" label="%tree.packages.node.name" icon="#packages" description="Packages">
+                            <items label="%tree.package.node.name" path="package" property="packages" icon="#package">
+                                <items label="%tree.procedures.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="procedures" icon="#procedure" visibleIf="object.dataSource.isAtLeastV10()">
+                                    <handler action="open" command="org.jkiss.dbeaver.ext.firebird.code.package.navigate"/-->
+                                    <!-- Proc arguments. Not inline because arguments reading is expensive -->
+                                    <!--items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                        <items label="%tree.attributes.node.name" itemLabel="%tree.attribute.node.name" path="attribute" property="attributes" icon="#attribute" navigable="false" inline="true" id="ProcedureArgumentAttributes" visibleIf="object.hasAttributes()">
+                                            <items ref="ProcedureArgumentAttributes"/>
+                                        </items>
+                                    </items>
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdProcedureStandalone" label="%tree.procedures.node.name" icon="#procedures" description="Procedures">
+                            <items label="%tree.procedure.node.name" itemLabel="%tree.procedure.node.name" path="procedure" property="procedures" icon="#procedure" id="Procedure">
+                                <items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdProcedureStandalone" label="%tree.functions.node.name" icon="#functions" description="Functions">
+                            <items label="%tree.function.node.name" itemLabel="%tree.function.node.name" path="function" property="functions" icon="#function" id="Function">
+                                <items label="%tree.arguments.node.name" itemLabel="%tree.argument.node.name" path="argument" property="parameters" icon="#argument" navigable="false" inline="false">
+                                    <items ref="ProcedureArgumentAttributes"/>
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSynonym" label="%tree.synonyms.node.name" icon="#synonyms" description="Synonyms">
+                            <items label="%tree.synonym.node.name" path="synonym" property="synonyms" icon="#synonym"/>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSchemaTrigger" label="%tree.schema.triggers.node.name" icon="#triggers" description="Schema and database level triggers">
+                            <items label="%tree.trigger.node.name" path="trigger" property="triggers" icon="#trigger">
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTableTrigger" label="%tree.table.triggers.node.name" icon="#triggers" description="Table triggers">
+                            <items label="%tree.table.trigger.node.name" path="tabletrigger" property="tableTriggers" icon="#trigger">
+                                <items label="%tree.columns.node.name" itemLabel="%tree.column.node.name" path="column" property="columns" navigable="false" inline="false">
+                                </items>
+                            </items>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdDBLink" label="%tree.database_links.node.name" icon="#folder_link" description="Database Links (DBLinks)">
+                            <items label="%tree.database_links.node.name" path="databaseLink" property="databaseLinks" icon="#link"/>
+                        </folder>
+                        <folder label="%tree.scheduler.node.name" icon="#scheduler_folder" description="Scheduler objects">
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSchedulerJob" label="%tree.scheduler.jobs.node.name" icon="#scheduler_job_folder" description="Scheduler jobs">
+                                <items label="%tree.scheduler.job.node.name" path="schedulerJob" property="schedulerJobs" icon="icons/scheduled_job.png">
+                                    <items label="%tree.scheduler.job.arguments.node.name" itemLabel="%tree.scheduler.job.argument.node.name" path="argument" property="arguments" icon="#argument" navigable="false" inline="false"/>
+                                </items>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSchedulerProgram" label="%tree.scheduler.programs.node.name" icon="#scheduler_program_folder" description="Scheduler programs">
+                                <items label="%tree.scheduler.program.node.name" path="schedulerProgram" property="schedulerPrograms" icon="icons/scheduled_program.png">
+                                    <items label="%tree.scheduler.program.arguments.node.name" itemLabel="%tree.scheduler.program.argument.node.name" path="argument" property="arguments" icon="#argument" navigable="false" inline="false"/>
+                                </items>
+                            </folder>
+                        </folder>
+                        <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdRecycledObject" label="%tree.recycle_bin.node.name" icon="#recycle_bin" description="Recycle Bin" visibleIf="object.dataSource.adminVisible &amp;&amp; object.dataSource.isAtLeastV10()">
+                            <items label="%tree.recycled_object.node.name" path="object" property="recycledObjects" icon="#recycle_bin"/>
+                        </folder>
+                    </items>
+                </folder>
+                <folder type="org.jkiss.dbeaver.model.struct.DBSObject" label="%tree.global_metadata.node.name" icon="#logical" description="Global metadata objects">
+                    <folder label="%tree.types.node.name" icon="#data_types" description="Types">
+                        <items label="%tree.data_type.node.name" path="type" property="localDataTypes" icon="#data_type"/>
+                    </folder>
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSynonym" label="%tree.public_synonyms.node.name" icon="#synonyms" description="Public synonyms">
+                        <items label="%tree.synonym.node.name" path="synonym" property="publicSynonyms" icon="#synonym"/>
+                    </folder>
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdDBLink" label="%tree.public_database_links.node.name" icon="#links" description="Public database links">
+                        <items label="%tree.database_link.node.name" path="databaseLink" property="publicDatabaseLinks" icon="#link"/>
+                    </folder>
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdRecycledObject" label="%tree.user_recycle_bin.node.name" icon="#recycle_bin" description="Current user's recycle bin">
+                        <items label="%tree.recycled_object.node.name" path="object" property="userRecycledObjects" icon="#recycle_bin"/>
+                    </folder>
+                </folder>
+                <folder type="org.jkiss.dbeaver.model.struct.DBSObject" label="%tree.storage.node.name" icon="#storage" description="Storage management">
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdTablespace" label="%tree.tablespaces.node.name" icon="#tablespaces" description="Tablespaces">
+                        <items label="%tree.tablespace.node.name" path="tablespace" property="tablespaces" icon="#tablespace">
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdDataFile" label="%tree.files.node.name" icon="#files" description="Data Files">
+                                <items label="%tree.file.node.name" path="file" property="files" icon="#file"/>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdSegment" label="%tree.objects.node.name" icon="#segments" description="Objects (segments)">
+                                <items label="%tree.segment.node.name" path="segment" property="segments" icon="#segment"/>
+                            </folder>
+                        </items>
+                    </folder>
+                </folder>
+                <folder type="org.jkiss.dbeaver.model.struct.DBSObject" label="%tree.security.node.name" icon="#security" description="Security management">
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdUser" label="%tree.users.node.name" icon="#folder_user" description="Users">
+                        <items label="%tree.user.node.name" path="users" property="users" icon="#user">
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivRole" label="%tree.roles.node.name" icon="#folder_role" description="User roles" navigable="false">
+                                <items label="%tree.role.node.name" path="roles" property="rolePrivs" icon="#user_group">
+                                </items>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivSystem" label="%tree.system_privileges.node.name" icon="#permissions" description="System Privileges" navigable="false">
+                                <items label="%tree.privilege.node.name" path="sysPrivs" property="systemPrivs" icon="#privilege">
+                                </items>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivObject" label="%tree.objects.node.name" icon="#permissions" description="Objects" navigable="false">
+                                <items label="%tree.privilege.node.name" path="objectPriv" property="objectPrivs" icon="#privilege">
+                                </items>
+                            </folder>
+                        </items>
+                    </folder>
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdRole" label="%tree.roles.node.name" icon="#folder_role" description="Roles">
+                        <items label="%tree.role.node.name" path="roles" property="roles" icon="#user_group">
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivUser" label="%tree.users.node.name" icon="#folder_user" description="Users" navigable="false">
+                                <items label="%tree.user.node.name" path="userPrivs" property="userPrivs" icon="#user">
+                                </items>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivRole" label="%tree.roles.node.name" icon="#folder_role" description="Roles" navigable="false">
+                                <items label="%tree.role.node.name" path="roles" property="rolePrivs" icon="#user_group">
+                                </items>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivSystem" label="%tree.system_privileges.node.name" icon="#permissions" description="System Privileges" navigable="false">
+                                <items label="%tree.privilege.node.name" path="sysPrivs" property="systemPrivs" icon="#privilege">
+                                </items>
+                            </folder>
+                            <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdPrivObject" label="%tree.objects.node.name" icon="#permissions" description="Objects" navigable="false">
+                                <items label="%tree.privilege.node.name" path="objectPriv" property="objectPrivs" icon="#privilege">
+                                </items>
+                            </folder>
+                        </items>
+                    </folder>
+                    <folder type="org.jkiss.dbeaver.ext.firebird.model.FirebirdUserProfile" label="%tree.profiles.node.name" icon="#folder_profile" description="User profiles">
+                        <items label="%tree.profile.node.name" path="profiles" property="profiles" icon="#profile">
+                            <items label="%tree.resource.node.name" path="resource" property="resources" icon="#resource"/>
+                        </items>
+                    </folder>
+                </folder>
+                <folder type="" label="%tree.administer.node.name" icon="#folder_admin" description="Maintenance/Settings">
+                    <treeContribution category="connectionEditor"/>
+                </folder>
+
+            </tree-->
+            <drivers managable="true">
+
+                <driver
+                        id="jaybird"
+                        label="Firebird"
+                        icon="icons/firebird_icon.png"
+                        iconBig="icons/firebird_icon_big.png"
+                        class="org.firebirdsql.jdbc.FBDriver"
+                        sampleURL="jdbc:firebirdsql://{host}:{port}/{file}"
+                        defaultPort="3050"
+                        webURL="https://firebirdsql.org/en/jdbc-driver/"
+                        propertiesURL="https://github.com/FirebirdSQL/jaybird/wiki/Connection-properties"
+                        description="Firebird JayBird driver"
+                        categories="sql,embedded">
+                    <replace provider="generic" driver="firebird_jaybird"/>
+                    <replace provider="generic" driver="firebird_jaybird3"/>
+
+                    <file type="jar" path="maven:/org.firebirdsql.jdbc:jaybird-jdk18:RELEASE[3.0.3]" bundle="!drivers.firebird"/>
+
+                    <file type="license" path="drivers/firebird3/LICENSE.txt" bundle="drivers.firebird"/>
+                    <file type="jar" path="drivers/firebird3/jaybird-full.jar" bundle="drivers.firebird"/>
+
+                    <property name="encoding" value="UTF8"/>
+
+                    <parameter name="supports-scroll" value="true"/>
+                    <parameter name="ddl-drop-column-short" value="true"/>
+                    <parameter name="script-delimiter-redefiner" value="SET TERM"/>
+                    <parameter name="supports-truncate" value="false"/>
+                </driver>
+
+                <driver
+                        id="Firebird2ODB"
+                        label="Firebird2ODB"
+                        icon="icons/firebird_icon.png"
+                        iconBig="icons/firebird_icon_big.png"
+                        class="odbfb.jdbc.OdbFbDriver"
+                        sampleURL="jdbc:odbfb:local:{file}"
+                        defaultPort="3050"
+                        webURL="https://firebirdsql.org/en/jdbc-driver/"
+                        propertiesURL="https://github.com/FirebirdSQL/jaybird/wiki/Connection-properties"
+                        description="Firebird JayBird driver"
+                        categories="sql,embedded">
+                    <!--replace provider="generic" driver="jaybird"/-->
+                    <replace provider="generic" driver="firebird_jaybird"/>
+                    <replace provider="generic" driver="firebird_jaybird3"/>
+
+
+                    <file type="jar" path="maven:/org.firebirdsql.jdbc:jaybird-jdk18:RELEASE[3.0.5]" bundle="!drivers.firebird"/>
+
+                    <file type="license" path="drivers/firebird3/LICENSE.txt" bundle="drivers.firebird"/>
+                    <file type="jar" path="drivers/firebird3/jaybird-full.jar" bundle="drivers.firebird"/>
+
+                    <property name="encoding" value="UTF8"/>
+
+                    <parameter name="supports-scroll" value="true"/>
+                    <parameter name="ddl-drop-column-short" value="true"/>
+                    <parameter name="script-delimiter-redefiner" value="SET TERM"/>
+                    <parameter name="supports-truncate" value="false"/>
+                </driver>
+
+<!--
+                <driver
+                        id="jaybird_embedded"
+                        label="Firebird Embedded"
+                        icon="icons/firebird_icon.png"
+                        class="org.firebirdsql.jdbc.FBDriver"
+                        sampleURL="jdbc:firebirdsql:embedded://{file}"
+                        embedded="true"
+                        webURL=""
+                        description="Firebird JayBird embedded driver">
+
+                    <file type="jar" path="maven:/org.firebirdsql.jdbc:jaybird-jdk18:RELEASE[3.0.3]" bundle="!drivers.firebird"/>
+
+                    <file type="license" path="drivers/firebird3/LICENSE.txt" bundle="drivers.firebird"/>
+                    <file type="jar" path="drivers/firebird3/jaybird-full.jar" bundle="drivers.firebird"/>
+                    <file type="jar" path="drivers/firebird3/jna.jar" bundle="drivers.firebird"/>
+
+                    <property name="encoding" value="UTF8"/>
+
+                                    <parameter name="supports-scroll" value="true"/>
+                                    <parameter name="ddl-drop-column-short" value="true"/>
+                                    <parameter name="script-delimiter-redefiner" value="SET TERM"/>
+                                    <parameter name="supports-truncate" value="false"/>
+                                </driver>
+                -->
+
+            </drivers>
+
+        </datasource>
+    </extension>
+
+    <extension point="org.jkiss.dbeaver.objectManager">
+        <manager class="org.jkiss.dbeaver.ext.firebird.edit.FireBirdTableColumnManager" objectType="org.jkiss.dbeaver.ext.firebird.model.FireBirdTableColumn"/>
+    </extension>
+
+</plugin>

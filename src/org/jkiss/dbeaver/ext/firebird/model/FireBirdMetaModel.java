@@ -33,27 +33,24 @@ import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.utils.CommonUtils;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jkiss.dbeaver.Log;
 import static org.jkiss.dbeaver.ext.firebird.FireBirdUtils.getFunctionSourceWithHeader;
-import org.jkiss.dbeaver.ext.generic.GenericConstants;
-import org.jkiss.dbeaver.ext.generic.model.meta.GenericMetaObject;
-import org.jkiss.dbeaver.model.impl.jdbc.JDBCConstants;
-import org.jkiss.dbeaver.model.struct.rdb.DBSProcedureParameterKind;
 import org.jkiss.dbeaver.model.struct.rdb.DBSProcedureType;
 
 /**
- * FireBirdDataSource
+ * FireBirdMetaModel
  */
 public class FireBirdMetaModel extends GenericMetaModel {
 
-    private Pattern ERROR_POSITION_PATTERN = Pattern.compile(" line ([0-9]+), column ([0-9]+)");
+    private final Pattern ERROR_POSITION_PATTERN = Pattern.compile(" line ([0-9]+), column ([0-9]+)");
+    private static final Log LOG = Log.getLog(FireBirdDataSource.class);
 
     public FireBirdMetaModel() {
         super();
@@ -77,7 +74,7 @@ public class FireBirdMetaModel extends GenericMetaModel {
     @Override
     public String getProcedureDDL(DBRProgressMonitor monitor, GenericProcedure sourceObject) throws DBException {
         //Log.getLog(this.getClass()).info(">>>>>>>>>>>>>>>>>>!!!!!!!!!"+sourceObject.getName()+"!!!!!!!!!!!!!!!!!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        return (sourceObject.getProcedureType() == DBSProcedureType.FUNCTION ? FireBirdUtils.getFunctionSource(monitor, (FirebirdGenericProcedure)sourceObject) : FireBirdUtils.getProcedureSource(monitor, sourceObject));
+        return (sourceObject.getProcedureType() == DBSProcedureType.FUNCTION ? FireBirdUtils.getFunctionSource(monitor, (FirebirdGenericProcedure) sourceObject) : FireBirdUtils.getProcedureSource(monitor, sourceObject));
     }
 
     @Override
@@ -189,8 +186,9 @@ public class FireBirdMetaModel extends GenericMetaModel {
 
     @Override
     public boolean isSystemTable(GenericTableBase table) {
-        final String tableName = table.getName();
-        return tableName.contains("$");    // [JDBC: Firebird]
+        String tableName = table.getName();
+        tableName = tableName.toUpperCase(Locale.ENGLISH);
+        return tableName.startsWith("RDB$") || tableName.startsWith("MON$");    // [JDBC: Firebird]
     }
 
     @Override
@@ -215,10 +213,10 @@ public class FireBirdMetaModel extends GenericMetaModel {
 
     @Override
     public void loadProcedures(DBRProgressMonitor dbrpm, GenericObjectContainer goc) throws DBException {
+        //LOG.info("loadProcedures ===========================================");
         super.loadProcedures(dbrpm, goc);
-        //super.loadProcedures(dbrpm, goc); //To change body of generated methods, choose Tools | Templates.
-
         try (JDBCSession session = DBUtils.openMetaSession(dbrpm, goc, "Read column domain type")) {
+            HashMap<String, FirebirdGenericProcedure> fl = new HashMap<>();
             // Read metadata
             try (JDBCPreparedStatement dbStat = session.prepareStatement("SELECT "
                     + " "
@@ -230,21 +228,21 @@ public class FireBirdMetaModel extends GenericMetaModel {
                     while (dbResult.next()) {
                         //result.add(new GenericProcedure(this, JDBCUtils.safeGetString(dbResult, 1), "spec", "descr", DBSProcedureType.FUNCTION, GenericFunctionResultType.NO_TABLE));
                         //final GenericProcedure procedure = createProcedureImpl(
+                        String fname = JDBCUtils.safeGetString(dbResult, "RDB$FUNCTION_NAME");
                         final FirebirdGenericProcedure procedure = new FirebirdGenericProcedure(
                                 goc,
-                                JDBCUtils.safeGetString(dbResult, "RDB$FUNCTION_NAME").trim(),
+                                (fname != null ? fname.trim() : ""),
                                 null,
                                 null,
                                 DBSProcedureType.FUNCTION,
                                 GenericFunctionResultType.NO_TABLE,
-                                (JDBCUtils.safeGetInt(dbResult, "RDB$DETERMINISTIC_FLAG")==1)
-                                );
-                        //Log.getLog(this.getClass()).info("procedure.getName()="+procedure.getName());
+                                (JDBCUtils.safeGetInt(dbResult, "RDB$DETERMINISTIC_FLAG") == 1)
+                        );
                         procedure.setDescription(JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION"));
                         procedure.setSource(JDBCUtils.safeGetString(dbResult, "RDB$FUNCTION_SOURCE"));
                         //procedure.setPersisted(JDBCUtils.safeGetInt(dbResult, "RDB$DETERMINISTIC_FLAG")==1);
                         //final GenericMetaObject pcObject = procedure.getDataSource().getMetaObject(GenericConstants.OBJECT_PROCEDURE_COLUMN);
-                        goc.addProcedure(procedure);
+                        fl.put(procedure.getName(), procedure);
                         //Log.getLog(this.getClass()).info("procedure.getParameters(dbrpm)="+procedure.getParameters(dbrpm));
                         //procedure.getParameters(dbrpm).add(new GenericProcedureParameter(procedure, "i", "int", Types.INTEGER, 1, 1, 
                         //Integer.SIZE, Integer.SIZE, true, "remarks", DBSProcedureParameterKind.RETURN));
@@ -254,19 +252,34 @@ public class FireBirdMetaModel extends GenericMetaModel {
                         //Log.getLog(this.getClass()).info("dbResult.isClosed()="+dbResult.isClosed());
                     }
                 }
-
-                for (FirebirdGenericProcedure gp : ((Collection<FirebirdGenericProcedure>)goc.getFunctionsOnly(dbrpm))) {
-                    //gp.getParameters(dbrpm).add(new GenericProcedureParameter(gp, 
-                    //      "wwww", "integer", 0, 0, 0, Integer.SIZE, Integer.SIZE, true, "", 
-                    //    DBSProcedureParameterKind.RETURN));
-                    gp.setSource(getFunctionSourceWithHeader(session, dbrpm, gp, gp.getSource()));
-                    //Log.getLog(this.getClass()).info("dbResult.isClosed()="+gp.getName());
-
-                }
-
             } catch (SQLException ex) {
-                throw new DBException("Error reading column domain type", ex);
+                throw new DBException("Error reading packages", ex);
             }
+
+            if (!session.getMetaData().getDriverVersion().equals("3.0")) {
+                for (GenericProcedure gp : goc.getFunctionsOnly(dbrpm)) {
+                    //Log.getLog(this.getClass()).info(gp.getParentObject().getName()+"!!!!!!!!!!!!!!!!!!!!!= "+gp.getName());
+                    gp.setSource(getFunctionSourceWithHeader(session, dbrpm, fl.get(gp.getName()), fl.get(gp.getName()).getSource()));
+                }
+                return;
+            }
+            for (FirebirdGenericProcedure gp : fl.values()) {
+                gp.setSource(getFunctionSourceWithHeader(session, dbrpm, fl.get(gp.getName()), fl.get(gp.getName()).getSource()));
+                goc.addProcedure(gp);
+                //gp.getParameters(dbrpm).add(new GenericProcedureParameter(gp, 
+                //      "wwww", "integer", 0, 0, 0, Integer.SIZE, Integer.SIZE, true, "", 
+                //    DBSProcedureParameterKind.RETURN));
+                //Log.getLog(this.getClass()).info("!!!!!!!!!!!!!!!!!!!!!gp.getName()="+gp.getName()+" "+gp.getSource());
+                //gp.setSource(getFunctionSourceWithHeader(session, dbrpm, gp, gp.getSource()));
+                //for(GenericProcedureParameter gpp:gp.getParameters(dbrpm)){
+                //    Log.getLog(this.getClass()).info(gpp.getParentObject().getName()+" "+gpp.getName());
+            }
+            //goc.addProcedure(gp);
+            //Log.getLog(this.getClass()).info("!!!!!!!!!!!!!!!!!!!!!gp.getName()="+gp.getName()+" "+gp.getSource());
+
+            //}
+        } catch (SQLException ex) {
+            throw new DBException("Error reading column domain type", ex);
         }
         /*try (JDBCSession session = DBUtils.openMetaSession(dbrpm, goc, "Read column domain type")) {
             // Read metadata

@@ -18,7 +18,6 @@ package org.jkiss.dbeaver.ext.firebird.model;
 
 import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.Log;
-import org.jkiss.dbeaver.ext.generic.model.GenericDataSource;
 import org.jkiss.dbeaver.ext.generic.model.GenericStructContainer;
 import org.jkiss.dbeaver.model.DBUtils;
 import org.jkiss.dbeaver.model.exec.jdbc.JDBCPreparedStatement;
@@ -36,9 +35,9 @@ import java.util.List;
 /**
  * FireBirdDataTypeCache
  */
-public class FireBirdDataTypeCache extends JDBCBasicDataTypeCache<GenericStructContainer, FireBirdDataType>
-{
-    private static final Log log = Log.getLog(FireBirdDataTypeCache.class);
+public class FireBirdDataTypeCache extends JDBCBasicDataTypeCache<GenericStructContainer, FireBirdDataType> {
+
+    private static final Log LOG = Log.getLog(FireBirdDataTypeCache.class);
 
     public FireBirdDataTypeCache(GenericStructContainer owner) {
         super(owner);
@@ -62,8 +61,7 @@ public class FireBirdDataTypeCache extends JDBCBasicDataTypeCache<GenericStructC
         try {
             try (JDBCSession session = DBUtils.openMetaSession(monitor, dataSource, "Load FireBird domain types")) {
                 try (JDBCPreparedStatement dbStat = session.prepareStatement(
-                    "SELECT F.* FROM RDB$FIELDS F ORDER BY RDB$FIELD_NAME"))
-                {
+                        "SELECT F.* FROM RDB$FIELDS F ORDER BY RDB$FIELD_NAME")) {
                     monitor.subTask("Load FireBird domain types");
                     try (JDBCResultSet dbResult = dbStat.executeQuery()) {
                         while (dbResult.next()) {
@@ -89,18 +87,18 @@ public class FireBirdDataTypeCache extends JDBCBasicDataTypeCache<GenericStructC
 
                             FireBirdFieldType fieldDT = FireBirdFieldType.getById(fieldType);
                             if (fieldDT == null) {
-                                log.error("Field type '" + fieldType + "' not found");
+                                LOG.error("Field type '" + fieldType + "' not found");
                                 continue;
                             }
                             String charsetName = dataSource.getMetaFieldValue(FireBirdConstants.TYPE_CHARACTER_SET_NAME, charsetId);
                             boolean notNull = JDBCUtils.safeGetInt(dbResult, "RDB$NULL_FLAG") == 1;
 
                             FireBirdDataType dataType = new FireBirdDataType(
-                                dataSource, fieldDT, fieldSubType, typeName.trim(), typeDescription, false, true, fieldPrecision, fieldScale, fieldScale,
-                                fieldLength, charLength,
-                                computedSource, validationSource, defaultSource,
-                                charsetName,
-                                notNull);
+                                    dataSource, fieldDT, fieldSubType, typeName.trim(), typeDescription, false, true, fieldPrecision, fieldScale, fieldScale,
+                                    fieldLength, charLength,
+                                    computedSource, validationSource, defaultSource,
+                                    charsetName,
+                                    notNull);
                             tmpObjectList.add(dataType);
                         }
                     }

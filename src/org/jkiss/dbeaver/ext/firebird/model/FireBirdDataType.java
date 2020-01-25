@@ -34,10 +34,9 @@ public class FireBirdDataType extends GenericDataType implements DBPSystemObject
     private boolean notNull;
 
     public FireBirdDataType(FireBirdDataSource genericDataSource, FireBirdFieldType fieldType, int subType, String name, String remarks,
-        boolean unsigned, boolean searchable, int precision, int minScale, int maxScale,
-        int fieldLength, int charLength,
-        String computedSource, String validationSource, String defaultSource, String charsetName, boolean notNull)
-    {
+            boolean unsigned, boolean searchable, int precision, int minScale, int maxScale,
+            int fieldLength, int charLength,
+            String computedSource, String validationSource, String defaultSource, String charsetName, boolean notNull) {
         super(genericDataSource, fieldType.getValueType(), name, remarks, unsigned, searchable, precision, minScale, maxScale);
 
         this.fieldType = fieldType;
@@ -60,9 +59,8 @@ public class FireBirdDataType extends GenericDataType implements DBPSystemObject
 
     @Override
     public DBPDataKind getDataKind() {
-        if (fieldType == FireBirdFieldType.CHAR &&
-            (FireBirdConstants.CHARSET_OCTETS.equals(charsetName) || FireBirdConstants.CHARSET_BINARY.equals(charsetName)))
-        {
+        if (fieldType == FireBirdFieldType.CHAR
+                && (FireBirdConstants.CHARSET_OCTETS.equals(charsetName) || FireBirdConstants.CHARSET_BINARY.equals(charsetName))) {
             return DBPDataKind.BINARY;
         }
         return super.getDataKind();

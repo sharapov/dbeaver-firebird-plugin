@@ -1,14 +1,18 @@
 Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: %Bundle-Name
+Automatic-Module-Name: org.jkiss.dbeaver.ext.firebird
 Bundle-SymbolicName: org.jkiss.dbeaver.ext.firebird;singleton:=true
-Bundle-Version: 1.0.120.qualifier
-Bundle-Release-Date: 20191021
-Require-Bundle: org.eclipse.core.runtime,
- org.jkiss.dbeaver.model,
- org.jkiss.dbeaver.ext.generic
+Built-By: jkiss.org
+Require-Bundle: org.eclipse.core.runtime,org.jkiss.dbeaver.model,org.j
+ kiss.dbeaver.ext.generic
+Bundle-ManifestVersion: 2
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-Vendor: %Bundle-Vendor
+Bundle-Name: %Bundle-Name
+Bundle-Version: 1.0.125.202001051908
+Bundle-Release-Date: 20200106
 Bundle-ClassPath: .
-Automatic-Module-Name: org.jkiss.dbeaver.ext.firebird
+Build-Time: 202001051408
+Created-By: jkiss.org
+Build-Jdk: 1.8.0_141
+

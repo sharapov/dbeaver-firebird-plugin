@@ -41,12 +41,10 @@ import java.util.Map;
  * FireBirdTableColumnManager
  */
 public class FireBirdTableColumnManager extends GenericTableColumnManager
-    implements DBEObjectRenamer<GenericTableColumn>, DBEObjectReorderer<GenericTableColumn>
-{
+        implements DBEObjectRenamer<GenericTableColumn>, DBEObjectReorderer<GenericTableColumn> {
 
     @Override
-    public StringBuilder getNestedDeclaration(DBRProgressMonitor monitor, GenericTableBase owner, DBECommandAbstract<GenericTableColumn> command, Map<String, Object> options)
-    {
+    public StringBuilder getNestedDeclaration(DBRProgressMonitor monitor, GenericTableBase owner, DBECommandAbstract<GenericTableColumn> command, Map<String, Object> options) {
         StringBuilder decl = super.getNestedDeclaration(monitor, owner, command, options);
         final GenericTableColumn column = command.getObject();
         if (column.isAutoIncrement()) {
@@ -61,15 +59,21 @@ public class FireBirdTableColumnManager extends GenericTableColumnManager
     @Override
     protected ColumnModifier[] getSupportedModifiers(GenericTableColumn column, Map<String, Object> options) {
         // According to SQL92 DEFAULT comes before constraints
-        return new ColumnModifier[] {DataTypeModifier, DefaultModifier, NotNullModifier};
+        return new ColumnModifier[]{DataTypeModifier,
+            DefaultModifier,
+            NotNullModifier};
     }
 
     /**
      * Is is pretty standard
+     *
+     * @param monitor
+     * @param actionList
+     * @param command
+     * @param options
      */
     @Override
-    protected void addObjectModifyActions(DBRProgressMonitor monitor, List<DBEPersistAction> actionList, ObjectChangeCommand command, Map<String, Object> options)
-    {
+    protected void addObjectModifyActions(DBRProgressMonitor monitor, List<DBEPersistAction> actionList, ObjectChangeCommand command, Map<String, Object> options) {
         final GenericTableColumn column = command.getObject();
 
         String prefix = "ALTER TABLE " + DBUtils.getObjectFullName(column.getTable(), DBPEvaluationContext.DDL) + " ALTER COLUMN " + DBUtils.getQuotedIdentifier(column) + " ";
@@ -85,23 +89,22 @@ public class FireBirdTableColumnManager extends GenericTableColumnManager
             }
         }
         if (command.getProperty(DBConstants.PROP_ID_DESCRIPTION) != null) {
-            actionList.add(new SQLDatabasePersistAction("Set column comment", "COMMENT ON COLUMN " +
-                DBUtils.getObjectFullName(column.getTable(), DBPEvaluationContext.DDL) + "." + DBUtils.getQuotedIdentifier(column) +
-                " IS " + SQLUtils.quoteString(column, CommonUtils.notEmpty(column.getDescription()))));
+            actionList.add(new SQLDatabasePersistAction("Set column comment", "COMMENT ON COLUMN "
+                    + DBUtils.getObjectFullName(column.getTable(), DBPEvaluationContext.DDL) + "." + DBUtils.getQuotedIdentifier(column)
+                    + " IS " + SQLUtils.quoteString(column, CommonUtils.notEmpty(column.getDescription()))));
         }
     }
 
     @Override
-    protected void addObjectRenameActions(DBRProgressMonitor monitor, List<DBEPersistAction> actions, ObjectRenameCommand command, Map<String, Object> options)
-    {
+    protected void addObjectRenameActions(DBRProgressMonitor monitor, List<DBEPersistAction> actions, ObjectRenameCommand command, Map<String, Object> options) {
         final GenericTableColumn column = command.getObject();
 
         actions.add(
-            new SQLDatabasePersistAction(
-                "Rename column",
-                "ALTER TABLE " + DBUtils.getQuotedIdentifier(column.getTable()) + " ALTER COLUMN " +
-                    DBUtils.getQuotedIdentifier(column.getDataSource(), command.getOldName()) +
-                    " TO " + DBUtils.getQuotedIdentifier(column.getDataSource(), command.getNewName())));
+                new SQLDatabasePersistAction(
+                        "Rename column",
+                        "ALTER TABLE " + DBUtils.getQuotedIdentifier(column.getTable()) + " ALTER COLUMN "
+                        + DBUtils.getQuotedIdentifier(column.getDataSource(), command.getOldName())
+                        + " TO " + DBUtils.getQuotedIdentifier(column.getDataSource(), command.getNewName())));
     }
 
     @Override
@@ -111,15 +114,14 @@ public class FireBirdTableColumnManager extends GenericTableColumnManager
 
     ///////////////////////////////////////////////
     // Reorder
-
     @Override
     protected void addObjectReorderActions(DBRProgressMonitor monitor, List<DBEPersistAction> actions, ObjectReorderCommand command, Map<String, Object> options) {
         final GenericTableColumn column = command.getObject();
         actions.add(
-            new SQLDatabasePersistAction(
-                "Reorder column",
-                "ALTER TABLE " + DBUtils.getQuotedIdentifier(command.getObject().getTable()) + " ALTER COLUMN " +
-                    DBUtils.getQuotedIdentifier(command.getObject()) + " POSITION " + column.getOrdinalPosition()));
+                new SQLDatabasePersistAction(
+                        "Reorder column",
+                        "ALTER TABLE " + DBUtils.getQuotedIdentifier(command.getObject().getTable()) + " ALTER COLUMN "
+                        + DBUtils.getQuotedIdentifier(command.getObject()) + " POSITION " + column.getOrdinalPosition()));
     }
 
     @Override

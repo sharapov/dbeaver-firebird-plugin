@@ -20,7 +20,7 @@ import org.jkiss.code.NotNull;
 import org.jkiss.dbeaver.DBException;
 import org.jkiss.dbeaver.Log;
 import org.jkiss.dbeaver.ext.firebird.model.plan.FireBirdPlanAnalyser;
-import org.jkiss.dbeaver.ext.generic.model.*;
+import org.jkiss.dbeaver.ext.generic.model.GenericDataSource;
 import org.jkiss.dbeaver.ext.generic.model.meta.GenericMetaModel;
 import org.jkiss.dbeaver.model.DBPDataSourceContainer;
 import org.jkiss.dbeaver.model.DBUtils;
@@ -40,6 +40,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.jkiss.dbeaver.ext.generic.model.GenericFunctionResultType;
+import org.jkiss.dbeaver.ext.generic.model.GenericPackage;
+import org.jkiss.dbeaver.ext.generic.model.GenericProcedure;
 import org.jkiss.dbeaver.model.struct.rdb.DBSProcedureType;
 
 public class FireBirdDataSource extends GenericDataSource
@@ -84,7 +87,7 @@ public class FireBirdDataSource extends GenericDataSource
     }
 
     @Override
-    public void initialize(DBRProgressMonitor monitor) throws DBException {
+    public void initialize(@NotNull DBRProgressMonitor monitor) throws DBException {
         // Read metadata
         try (JDBCSession session = DBUtils.openMetaSession(monitor, this, "Read generic metadata")) {
             // Read metadata
@@ -107,12 +110,12 @@ public class FireBirdDataSource extends GenericDataSource
                         }
                         typeName = typeName.trim();
                         String fieldDescription = JDBCUtils.safeGetString(dbResult, "RDB$SYSTEM_FLAG");
-                        IntKeyMap<MetaFieldInfo> metaFields = this.metaFields.get(fieldName);
-                        if (metaFields == null) {
-                            metaFields = new IntKeyMap<>();
-                            this.metaFields.put(fieldName, metaFields);
+                        IntKeyMap<MetaFieldInfo> metaFieldsLocal = this.metaFields.get(fieldName);
+                        if (metaFieldsLocal == null) {
+                            metaFieldsLocal = new IntKeyMap<>();
+                            this.metaFields.put(fieldName, metaFieldsLocal);
                         }
-                        metaFields.put(fieldType, new MetaFieldInfo(fieldType, typeName, fieldDescription));
+                        metaFieldsLocal.put(fieldType, new MetaFieldInfo(fieldType, typeName, fieldDescription));
                     }
                 }
             }
@@ -184,30 +187,38 @@ public class FireBirdDataSource extends GenericDataSource
             throws DBException {
         ArrayList<GenericPackage> result = new ArrayList<>();
 
-        try (JDBCSession session = DBUtils.openMetaSession(monitor, this, "Read column domain type")) {
+        try (JDBCSession session = DBUtils.openMetaSession(monitor, this, "Read packages info")) {
             // Read metadata
             try (JDBCPreparedStatement dbStat = session.prepareStatement("SELECT RDB$PACKAGE_NAME,RDB$PACKAGE_HEADER_SOURCE,RDB$PACKAGE_BODY_SOURCE,RDB$VALID_BODY_FLAG,RDB$SECURITY_CLASS,RDB$OWNER_NAME,RDB$SYSTEM_FLAG,RDB$DESCRIPTION FROM RDB$PACKAGES")) {
                 //dbStat.setString(1, getTable().getName());
                 //dbStat.setString(2, getName());
                 try (JDBCResultSet dbResult = dbStat.executeQuery()) {
-                    if (dbResult.next()) {
-                        GenericPackage gp = new GenericPackage(this, JDBCUtils.safeGetString(dbResult, 1).trim() /*"PACKAGES"*/, false);
+                    while (dbResult.next()) {
+                        GenericPackage gp = new GenericPackage(this, JDBCUtils.safeGetStringTrimmed(dbResult, 1) /*"PACKAGES"*/, false);
                         result.add(gp);
-                        //GenericPackage gpc  = new GenericPackage(this, JDBCUtils.safeGetString(dbResult, 1).trim(), false);
-                        //gp.addPackage(gpc);
+                        FirebirdPackage gph = new FirebirdPackage(this, "HEADER", false, "CREATE OR ALTER PACKAGE " + JDBCUtils.safeGetStringTrimmed(dbResult, 1) + " \nAS\n"
+                                + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_HEADER_SOURCE") + ";\n\n"
+                                + "COMMENT ON PACKAGE " + JDBCUtils.safeGetStringTrimmed(dbResult, 1) + " IS '" + JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION") + "';\n");
+                        gp.addPackage(gph);
+                        FirebirdPackage gpb = new FirebirdPackage(this, "BODY", false,
+                                "RECREATE PACKAGE BODY " + JDBCUtils.safeGetStringTrimmed(dbResult, 1) + "\n"
+                                + "AS\n" + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_BODY_SOURCE") + ";\n\n");
+                        gp.addPackage(gpb);
+
+                        //LOG.info(dbResult+" "+JDBCUtils.safeGetString(dbResult, 1));
                         GenericProcedure gpp = new GenericProcedure(gp, /*JDBCUtils.safeGetString(dbResult, 1).trim() + */ "HEADER", JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_HEADER_SOURCE") + "\n" + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_BODY_SOURCE"), JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION"), DBSProcedureType.UNKNOWN, GenericFunctionResultType.UNKNOWN);
                         gpp.setSource(
-                                "CREATE OR ALTER PACKAGE " + JDBCUtils.safeGetString(dbResult, 1).trim() + " \nAS\n"
+                                "CREATE OR ALTER PACKAGE " + JDBCUtils.safeGetStringTrimmed(dbResult, 1) + " \nAS\n"
                                 + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_HEADER_SOURCE") + ";\n\n"/*\n\nRECREATE PACKAGE BODY "+JDBCUtils.safeGetString(dbResult, 1).trim()+"\n" +
                             "AS\n"+JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_BODY_SOURCE")+";\n\n"*/
-                                + "COMMENT ON PACKAGE " + JDBCUtils.safeGetString(dbResult, 1).trim() + " IS '" + JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION") + "';\n"
+                                + "COMMENT ON PACKAGE " + JDBCUtils.safeGetStringTrimmed(dbResult, 1) + " IS '" + JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION") + "';\n"
                         );
                         gp.addProcedure(gpp);
                         GenericProcedure gpp1 = new GenericProcedure(gp, /*JDBCUtils.safeGetString(dbResult, 1).trim()+*/ "BODY",
                                 /*JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_HEADER_SOURCE")+"\n"+JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_BODY_SOURCE")*/ "", JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION"), DBSProcedureType.UNKNOWN, GenericFunctionResultType.UNKNOWN);
                         gpp1.setSource(
                                 /*"CREATE OR ALTER PACKAGE "+JDBCUtils.safeGetString(dbResult, 1).trim()+" \nAS\n" 
-                                + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_HEADER_SOURCE")+";\n\n"+*/"RECREATE PACKAGE BODY " + JDBCUtils.safeGetString(dbResult, 1).trim() + "\n"
+                                + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_HEADER_SOURCE")+";\n\n"+*/"RECREATE PACKAGE BODY " + JDBCUtils.safeGetStringTrimmed(dbResult, 1) + "\n"
                                 + "AS\n" + JDBCUtils.safeGetString(dbResult, "RDB$PACKAGE_BODY_SOURCE") + ";\n\n"
                         //+ "COMMENT ON PACKAGE "+JDBCUtils.safeGetString(dbResult, 1).trim()+" IS '"+JDBCUtils.safeGetString(dbResult, "RDB$DESCRIPTION")+"';\n"
                         );
@@ -216,8 +227,48 @@ public class FireBirdDataSource extends GenericDataSource
                     }
                 }
 
+                //try (JDBCSession sessionp = DBUtils.openUtilSession(monitor, this, "Read procs info")) {
+                for (GenericPackage gp : result) {
+                    GenericProcedure gpp;
+                    for (GenericPackage gpb : gp.getPackages(monitor)) //if(gp.getName().equals("BODY"))
+                    {
+                        try (JDBCPreparedStatement dbStatp = session.prepareStatement(
+                                "SELECT "
+                                + "RDB$PROCEDURE_NAME,RDB$PROCEDURE_ID,RDB$PROCEDURE_INPUTS,RDB$PROCEDURE_OUTPUTS,RDB$DESCRIPTION,RDB$PROCEDURE_SOURCE,RDB$PROCEDURE_BLR,RDB$SECURITY_CLASS,RDB$OWNER_NAME,RDB$RUNTIME,RDB$SYSTEM_FLAG,RDB$PROCEDURE_TYPE,RDB$VALID_BLR,RDB$DEBUG_INFO,RDB$ENGINE_NAME,RDB$ENTRYPOINT,RDB$PACKAGE_NAME,RDB$PRIVATE_FLAG "
+                                + " FROM RDB$PROCEDURES WHERE RDB$PACKAGE_NAME = ?"
+                        )) {
+                            dbStatp.setString(1, gp.getName());
+                            try (JDBCResultSet dbResultp = dbStatp.executeQuery()) {
+                                if (dbResultp.next()) {
+                                    gpp = new GenericProcedure(gpb, JDBCUtils.safeGetStringTrimmed(dbResultp, 1), JDBCUtils.safeGetStringTrimmed(dbResultp, 1), JDBCUtils.safeGetString(dbResultp, "RDB$DESCRIPTION"), DBSProcedureType.PROCEDURE, GenericFunctionResultType.UNKNOWN);
+                                    gpp.setSource(((FirebirdPackage) gpb).getSource());
+                                    gpb.addProcedure(gpp);
+                                    //LOG.info(JDBCUtils.safeGetStringTrimmed(dbResultp, 1));
+                                }
+                            }
+                            //}
+                        }
+                        try (JDBCPreparedStatement dbStatp = session.prepareStatement(
+                                "SELECT "
+                                + "RDB$FUNCTION_NAME,RDB$FUNCTION_TYPE,RDB$QUERY_NAME,RDB$DESCRIPTION,RDB$MODULE_NAME,RDB$ENTRYPOINT,RDB$RETURN_ARGUMENT,RDB$SYSTEM_FLAG,RDB$ENGINE_NAME,RDB$PACKAGE_NAME,RDB$PRIVATE_FLAG,RDB$FUNCTION_SOURCE,RDB$FUNCTION_ID,RDB$FUNCTION_BLR,RDB$VALID_BLR,RDB$DEBUG_INFO,RDB$SECURITY_CLASS,RDB$OWNER_NAME,RDB$LEGACY_FLAG,RDB$DETERMINISTIC_FLAG "
+                                + " FROM RDB$FUNCTIONS WHERE RDB$PACKAGE_NAME = ?"
+                        )) {
+                            dbStatp.setString(1, gp.getName());
+                            try (JDBCResultSet dbResultp = dbStatp.executeQuery()) {
+                                if (dbResultp.next()) {
+                                    gpp = new GenericProcedure(gpb, JDBCUtils.safeGetStringTrimmed(dbResultp, 1), JDBCUtils.safeGetStringTrimmed(dbResultp, 1), JDBCUtils.safeGetString(dbResultp, "RDB$DESCRIPTION"), DBSProcedureType.FUNCTION, GenericFunctionResultType.UNKNOWN);
+                                    gpp.setSource(((FirebirdPackage) gpb).getSource());
+                                    gpb.addProcedure(gpp);
+                                    //LOG.info(JDBCUtils.safeGetStringTrimmed(dbResultp, 1));
+                                }
+                            }
+                            //}
+                        }
+                    }
+                }
+
             } catch (SQLException ex) {
-                throw new DBException("Error reading column domain type", ex);
+                throw new DBException("Error packages info", ex);
             }
         }
 
